@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.pytest_cache/
+.streamlit/secrets.toml
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Assignment brief (instructor material, keep out of the public repo)
+*.pdf
