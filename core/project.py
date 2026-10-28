@@ -1,4 +1,4 @@
-"""Project details shown in the sidebar and footer. Edit these for your group."""
+"""Project details shown on the Overview page, sidebar and footer."""
 
 PROJECT = {
     "title": "Deadlock Lab",
@@ -6,13 +6,12 @@ PROJECT = {
     "course": "Operating Systems",
     "activity": "IA Assignment Activity 2",
     "institute": "MIT Academy of Engineering",
-    "group": "Group __",
     "year": 2026,
-    # Replace with your 4–5 members: ("Name", "Roll number", "Main contribution")
+    # (Name, PRN)
     "members": [
-        ("Member 1", "Roll no.", "Banker's Algorithm and request handling"),
-        ("Member 2", "Roll no.", "Deadlock detection and recovery"),
-        ("Member 3", "Roll no.", "Prevention simulator and trade-off analysis"),
-        ("Member 4", "Roll no.", "Test cases, validation and documentation"),
+        ("Sanskar Chandawar", "202401040137"),
+        ("Vivek Sanap", "202401040091"),
+        ("Vyankatesh Kulkarni", "202401040034"),
+        ("Omkar Vairagkar", "202401040045"),
     ],
 }

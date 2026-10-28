@@ -2,7 +2,16 @@
 
 **An interactive dashboard for deadlock analysis and resource allocation.** It covers avoidance with Banker's Algorithm, detection and recovery, and prevention, each on its own page.
 
-Built for *Operating Systems, IA Assignment Activity 2: AI-Assisted Dashboard Development and Deadlock Analysis*.
+Built for *Operating Systems, IA Assignment Activity 2: AI-Assisted Dashboard Development and Deadlock Analysis*, MIT Academy of Engineering.
+
+## Team
+
+| Name | PRN |
+|---|---|
+| Sanskar Chandawar | 202401040137 |
+| Vivek Sanap | 202401040091 |
+| Vyankatesh Kulkarni | 202401040034 |
+| Omkar Vairagkar | 202401040045 |
 
 > **Live demo:** `https://<your-app>.streamlit.app` *(add your link after deploying)*
 
@@ -12,7 +21,7 @@ Built for *Operating Systems, IA Assignment Activity 2: AI-Assisted Dashboard De
 
 | Page | Covers | You can… |
 |---|---|---|
-| **Overview** | Summary | See live test status, the outcome legend and a 6-minute demo script |
+| **Overview** | Summary | See live test status, the outcome legend and the team |
 | **Deadlock concepts** | Theory | Read about the four Coffman conditions, the four handling strategies, safe vs unsafe vs deadlocked, and pseudocode |
 | **Avoidance: Banker's** | Scenarios A, B, C | Set processes, resources, Allocation, Maximum and Available. Need is computed automatically. Step through the safety algorithm and Work updates, then submit requests that are granted, made to wait or denied |
 | **Detection & recovery** | Scenario D | Draw the resource-allocation and wait-for graphs, find cycles, confirm deadlock with the method that fits the resource model, and abort a victim to recover |
@@ -92,7 +101,7 @@ core/
   testcases.py          TC1–TC6, computed from the real functions
   status.py             The distinct outcome states
   ui.py                 Shared Streamlit widgets, charts and graphs
-  project.py            Group name and members (edit this!)
+  project.py            Team names and PRNs
 tests/test_core.py      Hand-checked pytest suite
 .streamlit/config.toml  Theme
 ```
@@ -101,7 +110,7 @@ All algorithms in `core/` are plain Python with no Streamlit import, so each one
 
 ## Make it yours
 
-- **Team details:** edit `core/project.py` (group number, members, roll numbers, contributions).
+- **Team details:** edit `core/project.py` (member names and PRNs).
 - **Your own test cases:** edit `core/scenarios.py`. The Test lab, the presets and `pytest` all pick up the change.
 - **AI Usage Record:** fill it in on the *AI usage record* page and download it.
 
@@ -111,4 +120,4 @@ This project was developed with AI assistance (Claude, via Claude Code) for the 
 
 ## License
 
-[MIT](LICENSE) © 2026 the project authors.
+[MIT](LICENSE) © 2026 Sanskar Chandawar, Vivek Sanap, Vyankatesh Kulkarni, Omkar Vairagkar.

@@ -73,20 +73,12 @@ with right:
     with st.container(border=True):
         status_legend()
 
-st.subheader("Six-minute demo script")
-with st.container(border=True):
-    st.markdown(
-        """
-| Time | Show | Page | What to say |
-|---|---|---|---|
-| 0:00 | Safe state | Avoidance | “Need = Max − Allocation. Work starts at Available. P1 fits first, returns its resources, and the sequence P1 → P3 → P4 → P0 → P2 completes.” |
-| 1:15 | Request that waits | Avoidance | “P2 asks for (4,0,0). It's within Need, so it's **valid**, but only 3 A are free. It **waits**, and nothing changes.” |
-| 2:00 | Request that's denied | Avoidance | “P4's (3,3,0) fits Need and Available, but the trial state has no safe sequence. **Denied** and rolled back. That's unsafe, not deadlock.” |
-| 3:00 | Deadlock detected | Detection | “Multiple-instance model, so we confirm with the detection algorithm, not just the cycle. P1–P4 are deadlocked.” |
-| 4:00 | Recovery | Detection | “Abort P2. It releases (3,0,3) and everyone else finishes.” |
-| 4:45 | Cycle ≠ deadlock | Detection | “Here's a cycle with 2-instance resources and no deadlock. A cycle is necessary, not sufficient.” |
-| 5:15 | Prevention | Prevention | “Ordered acquisition removes circular wait. The price is idle holding and longer completion time.” |
-"""
-    )
+st.subheader("Team")
+st.caption(f"{PROJECT['institute']} · {PROJECT['course']}, {PROJECT['activity']}")
+cols = st.columns(len(PROJECT["members"]))
+for col, (name, prn) in zip(cols, PROJECT["members"]):
+    with col.container(border=True, height="stretch"):
+        st.markdown(f"**:material/person: {name}**")
+        st.caption(f"PRN {prn}")
 
 footer()

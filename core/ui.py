@@ -252,6 +252,7 @@ def wfg_dot(n: int, edges, resources: list[str], cycle: list[str] | None = None,
 def footer():
     from core.project import PROJECT
     st.caption(
-        f"© {PROJECT['year']} {PROJECT['group']} · {PROJECT['course']}, {PROJECT['activity']} · "
+        f"© {PROJECT['year']} {', '.join(name for name, _ in PROJECT['members'])} · "
+        f"{PROJECT['course']}, {PROJECT['activity']} · "
         f"{PROJECT['institute']}. Built with Streamlit. Algorithms verified by the test suite in tests/."
     )

@@ -35,8 +35,8 @@ with st.sidebar:
     st.markdown(f"### :material/sync_lock: {PROJECT['title']}")
     st.caption(f"{PROJECT['course']} · {PROJECT['activity']}")
     with st.expander("Team", icon=":material/group:"):
-        st.markdown(f"**{PROJECT['group']}**, {PROJECT['institute']}")
-        for name, roll, role in PROJECT["members"]:
-            st.markdown(f"**{name}** · {roll}  \n:gray[{role}]")
+        st.caption(PROJECT["institute"])
+        for name, prn in PROJECT["members"]:
+            st.markdown(f"**{name}**  \n:gray[PRN {prn}]")
 
 page.run()
