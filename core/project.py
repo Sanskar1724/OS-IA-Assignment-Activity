@@ -11,7 +11,7 @@ PROJECT = {
     "members": [
         ("Sanskar Chandawar", "202401040137"),
         ("Vivek Sanap", "202401040091"),
-        ("Vyankatesh Kulkarni", "202401040034"),
+        ("Vyankatesh Kulkarni", "202401040134"),
         ("Omkar Vairagkar", "202401040045"),
     ],
 }
