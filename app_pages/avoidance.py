@@ -3,11 +3,13 @@ from copy import deepcopy
 import pandas as pd
 import streamlit as st
 
-from core.bankers import compute_need, leq, request_resources, safety_algorithm
+from core.bankers import (compute_need, finish_snapshots, leq, move_step, request_resources,
+                          safety_algorithm)
 from core.scenarios import BANKER_BASE, REQUESTS
 from core.status import Status
-from core.ui import (allocation_chart, edit_matrix, edit_vector, footer, resize, resource_names,
-                     sequence_chips, show_matrix, status_banner, trace_table, vec, work_chart)
+from core.ui import (allocation_chart, banker_matrices, edit_matrix, edit_vector, footer, resize,
+                     resource_names, sequence_chips, show_matrix, status_banner, trace_table, vec,
+                     work_chart)
 from core.validation import validate_system
 
 
@@ -106,7 +108,7 @@ st.session_state.bank_working = state
 
 errors = validate_system(allocation, maximum, available, procs, res_names)
 if errors:
-    status_banner(Status.INVALID, "This configuration can't be evaluated. Fix the cells below.", errors)
+    status_banner(Status.INVALID, "This configuration can't be evaluated. Fix the cells listed below.", errors)
     st.caption("Nothing was run. The safety check only runs on valid input, which keeps “invalid” and "
                "“unsafe” separate.")
     footer()
@@ -130,28 +132,105 @@ if safety.safe:
     ])
 else:
     stuck = ", ".join(f"P{i}" for i in safety.stuck)
+    start = (f"After {', '.join(f'P{i}' for i in safety.sequence)} finish, Work = "
+             if safety.sequence else "No process can finish: Work = ")
     status_banner(Status.UNSAFE, "The system is in an unsafe state.", [
-        f"After {', '.join(f'P{i}' for i in safety.sequence) or 'no process'} finish, Work = "
-        f"{vec(safety.final_work)}, and that isn't enough for any of {stuck}.",
+        f"{start}{vec(safety.final_work)}, and that isn't enough for any of {stuck}.",
         "This is not a deadlock. No one is blocked yet. Processes might release resources early and "
         "everyone could still finish. The system just can't guarantee it.",
         "Go to Detection & recovery to check whether processes are actually stuck right now.",
     ])
 
-st.markdown("**Safe sequence**")
+st.markdown("**Safe sequence**" if safety.safe else "**Processes that could finish before it got stuck**")
 sequence_chips(safety.sequence)
 
-t1, t2 = st.columns([3, 2])
+# --- Step-through -----------------------------------------------------------------------
+
+st.subheader("Step through the safety algorithm")
+st.caption("Each step checks one unfinished process: if its Need fits in Work, it finishes and returns its "
+           "Allocation, so Work grows. Passes repeat until a full pass finishes nobody.")
+
+steps = safety.steps
+total = len(steps)
+snaps = finish_snapshots(safety, n)
+sig = repr((allocation, maximum, available))
+if st.session_state.get("bk_sig") != sig:      # new or edited state → start from the beginning
+    st.session_state.bk_sig = sig
+    st.session_state.bk_step = 0
+
+
+def _step(action: str):
+    st.session_state.bk_step = move_step(st.session_state.bk_step, total, action)
+
+
+k = st.session_state.bk_step
+with st.container(horizontal=True, vertical_alignment="center"):
+    st.button("Reset", icon=":material/restart_alt:", on_click=_step, args=("reset",), disabled=k == 0)
+    st.button("Previous", icon=":material/chevron_left:", on_click=_step, args=("prev",), disabled=k == 0)
+    st.button("Next step", icon=":material/chevron_right:", on_click=_step, args=("next",),
+              disabled=k == total, type="primary")
+    st.button("Run to end", icon=":material/fast_forward:", on_click=_step, args=("end",), disabled=k == total)
+st.progress(k / total if total else 1.0, text=f"Step {k} of {total}")
+
+if k == 0:
+    work_now, finished, current = list(available), [False] * n, None
+    st.info(f"**Start.** Work = Available = {vec(available)}. Finish is false for every process. "
+            "Press **Next step** to check the first process.", icon=":material/flag:")
+else:
+    s = steps[k - 1]
+    work_now, finished, current = s.work_after, snaps[k - 1], s.process
+    if s.can_finish:
+        st.success(f"**Pass {s.pass_no} · P{s.process}:** Need {vec(s.need)} ≤ Work {vec(s.work_before)}. "
+                   f"P{s.process} can finish and returns Allocation {vec(allocation[s.process])}. "
+                   f"Work = {vec(s.work_before)} + {vec(allocation[s.process])} = **{vec(s.work_after)}**. "
+                   f"Finish[P{s.process}] = true.", icon=":material/check_circle:")
+    else:
+        short = [r for r, nd, w in zip(res_names, s.need, s.work_before) if nd > w]
+        st.warning(f"**Pass {s.pass_no} · P{s.process}:** Need {vec(s.need)} ≰ Work {vec(s.work_before)} "
+                   f"(not enough {', '.join(short)}). Skip it for now. Work stays {vec(s.work_before)}.",
+                   icon=":material/skip_next:")
+
+m1, m2 = st.columns([3, 2])
+with m1:
+    st.markdown("**Allocation · Maximum · Need**")
+    banker_matrices(allocation, maximum, need, res_names, finished, current)
+    st.caption("Highlighted row: the process checked at this step. Grey rows: already finished.")
+with m2:
+    st.markdown("**Work vector**")
+    before = steps[k - 1].work_before if k else available
+    with st.container(horizontal=True):
+        for r, w, b in zip(res_names, work_now, before):
+            st.metric(r, w, delta=(w - b) or None, border=True)
+    st.markdown("**Finish vector**")
+    st.markdown(" ".join(
+        (f":green-badge[P{i}: true]" if f else f":gray-badge[P{i}: false]") for i, f in enumerate(finished)))
+    done_so_far = [st_.process for st_ in steps[:k] if st_.can_finish]
+    st.markdown("**Sequence so far**")
+    if done_so_far:
+        st.markdown(" → ".join(f":green-badge[P{i}]" for i in done_so_far))
+    else:
+        st.caption("No process has finished yet.")
+
+if k == total:
+    if safety.safe:
+        st.success(f"**Finished.** Every Finish entry is true, so the state is **safe**. "
+                   f"Safe sequence: {' → '.join(f'P{i}' for i in safety.sequence)}.", icon=":material/verified_user:")
+    else:
+        st.warning(f"**Finished.** A full pass finished nobody. Unfinished: "
+                   f"{', '.join(f'P{i}' for i in safety.stuck)}. The state is **unsafe**: completion can't be "
+                   "guaranteed. That is *not* a confirmed deadlock; only the detection algorithm, using "
+                   "current requests, can confirm one.", icon=":material/warning:")
+
+with st.expander("Full trace table", icon=":material/list_alt:"):
+    trace_table(steps, current=k or None)
+
+t1, t2 = st.columns(2)
 with t1:
-    st.markdown("**Step-by-step trace**")
-    st.caption("Each pass checks the unfinished processes in order. A process finishes when its Need fits in Work.")
-    trace_table(safety.steps)
-with t2:
     st.markdown("**How Work grows**")
     work_chart(safety.sequence, available, allocation, res_names)
-
-st.markdown("**Who holds what**")
-allocation_chart(allocation, available, res_names)
+with t2:
+    st.markdown("**Who holds what**")
+    allocation_chart(allocation, available, res_names)
 
 # --- 3. Request ------------------------------------------------------------------------
 

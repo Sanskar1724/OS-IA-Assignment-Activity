@@ -22,6 +22,10 @@ DEFAULT = pd.DataFrame([
      "Output generated": "Scenario data for TC1–TC6 and the pytest suite in tests/test_core.py",
      "Student verification": "✎ e.g. Recomputed TC3's trial state (Available = 0,0,2) by hand and confirmed "
                              "no process can finish"},
+    {"AI tool used": "Claude (Anthropic) via Claude Code", "Purpose": "Feature upgrade",
+     "Output generated": "Ignorance page, Deadlock games, Banker's step-through, richer graphs, Team & resources "
+                         "page, light/dark theming, 45 more tests",
+     "Student verification": "✎ e.g. Played every game round and checked each answer against our own hand trace"},
 ])
 
 if "ai_record" not in st.session_state:
@@ -74,6 +78,10 @@ st.markdown(
 | Recovery by process termination | `core/detection.py` | `recover`, `pick_victim` |
 | Prevention policies | `core/prevention.py` | `simulate` |
 | TC1–TC6 table | `core/testcases.py` | `run_all` |
+| Banker's step-through | `core/bankers.py` | `finish_snapshots`, `move_step` |
+| Process states, resource availability | `core/detection.py` | `process_states`, `resource_summary` |
+| Ignorance advisor and scenarios | `core/ignorance.py` | `recommend`, `check_choice`, `expected_yearly_cost` |
+| Game questions and scoring | `core/games.py` | `grade`, question banks |
 """
 )
 

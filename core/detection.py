@@ -176,6 +176,52 @@ def rag_cycle(allocation: Matrix, request: Matrix) -> list[str]:
     return path + [procs[-1]]
 
 
+def name_cycle(cycle: list[str], resources: list[str]) -> list[str]:
+    """Replace internal resource ids (R0, R1, …) in a cycle with display names."""
+    return [resources[int(v[1:])] if v.startswith("R") else v for v in cycle]
+
+
+# --- Tabular views of the current state ------------------------------------------
+
+def resource_summary(allocation: Matrix, request: Matrix, available: Vector) -> list[dict]:
+    """Per resource type: total, allocated, free and outstanding requests."""
+    totals = total_instances(allocation, available)
+    rows = []
+    for j, total in enumerate(totals):
+        allocated = sum(row[j] for row in allocation)
+        requested = sum(row[j] for row in request)
+        rows.append({"resource": j, "total": total, "allocated": allocated, "free": available[j],
+                     "requested": requested, "shortfall": max(0, requested - available[j])})
+    return rows
+
+
+def process_states(allocation: Matrix, request: Matrix, result: DetectionResult) -> list[dict]:
+    """Per process: whether it is waiting, who it waits on, and the detection verdict.
+
+    state is one of:
+      "deadlocked"  confirmed by the detection algorithm
+      "waiting"     has an outstanding request, but will eventually be satisfied
+      "not waiting" requests nothing right now
+    """
+    waits = wait_for_edges(allocation, request)
+    order = {pid: k for k, pid in enumerate(result.sequence, start=1)}
+    rows = []
+    for i in range(len(allocation)):
+        if i in result.deadlocked:
+            state = "deadlocked"
+        elif any(request[i]):
+            state = "waiting"
+        else:
+            state = "not waiting"
+        rows.append({
+            "process": i,
+            "state": state,
+            "waits_on": sorted({k for a, k, _ in waits if a == i}),
+            "finish_order": order.get(i),
+        })
+    return rows
+
+
 # --- Recovery -------------------------------------------------------------------
 
 @dataclass

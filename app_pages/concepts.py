@@ -1,7 +1,7 @@
 import streamlit as st
 
 from core.status import Status
-from core.ui import footer, status_legend
+from core.ui import footer, state_regions_dot, status_legend
 
 st.title(":material/school: Deadlock concepts")
 st.markdown(
@@ -29,7 +29,7 @@ for col, (icon, name, what, fix) in zip(cols, conds):
         st.write(what)
         st.caption(f"**To break it:** {fix}")
 
-st.subheader("Four ways to handle deadlock")
+st.subheader("Four ways to handle deadlock, plus ignoring it")
 st.markdown(
     """
 | Strategy | When it acts | What it needs to know | Cost | In this dashboard |
@@ -38,29 +38,14 @@ st.markdown(
 | **Avoidance** | Before every allocation | Each process's **maximum** demand, declared in advance | Safety check on every request; requests may be denied | Avoidance: Banker's |
 | **Detection** | Periodically, or when the CPU idles | What each process is **currently requesting** | Running the algorithm; deadlocks exist until found | Detection & recovery |
 | **Recovery** | After a deadlock is detected | Which processes are deadlocked and what they hold | Lost work from aborted or rolled-back processes | Detection & recovery |
+| **Ignorance** (ostrich) | Never: no handling code runs | Nothing | Deadlocks still happen and are cleared by hand (kill, restart) | Ignorance |
 """
 )
 
 left, right = st.columns(2)
 with left:
     st.subheader("Safe, unsafe, deadlocked")
-    st.graphviz_chart(
-        """
-digraph G {
-  bgcolor="transparent"; compound=true; node [fontname="Helvetica" fontsize=12 shape=box style="rounded,filled"];
-  subgraph cluster_all { label="All possible states"; fontname="Helvetica"; style="rounded"; color="#77766f";
-    safe [label="SAFE\\na safe sequence exists" fillcolor="#e3f4ea" color="#1baf7a"];
-    subgraph cluster_unsafe { label="UNSAFE: no safe sequence"; style="rounded,filled"; fillcolor="#fff3dc"; color="#eda100";
-      maybe [label="may still finish\\n(processes release early)" fillcolor="#fff8ea" color="#eda100"];
-      dead [label="DEADLOCK\\nprocesses already blocked" fillcolor="#fde2e1" color="#c62828"];
-    }
-  }
-  safe -> maybe [label=" risky grant" style=dashed color="#77766f" fontname="Helvetica" fontsize=10];
-  maybe -> dead [label=" bad luck" style=dashed color="#77766f" fontname="Helvetica" fontsize=10];
-}
-""",
-        width="stretch",
-    )
+    st.graphviz_chart(state_regions_dot(), width="stretch")
     st.caption(
         "Deadlock sits *inside* the unsafe region. Banker's Algorithm keeps the system in the green box, "
         "so it can never reach the red one."

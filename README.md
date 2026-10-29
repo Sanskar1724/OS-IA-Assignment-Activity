@@ -1,6 +1,6 @@
 # Deadlock Lab
 
-**An interactive dashboard for deadlock analysis and resource allocation.** It covers avoidance with Banker's Algorithm, detection and recovery, and prevention, each on its own page.
+**An interactive dashboard for learning and analysing deadlocks.** It covers prevention, avoidance (Banker's Algorithm), detection with recovery, and ignorance (the ostrich algorithm), each on its own page. It also has practice games, a live test lab and revision resources.
 
 Built for *Operating Systems, IA Assignment Activity 2: AI-Assisted Dashboard Development and Deadlock Analysis*, MIT Academy of Engineering.
 
@@ -10,24 +10,29 @@ Built for *Operating Systems, IA Assignment Activity 2: AI-Assisted Dashboard De
 |---|---|
 | Sanskar Chandawar | 202401040137 |
 | Vivek Sanap | 202401040091 |
-| Vyankatesh Kulkarni | 202401040034 |
+| Vyankatesh Kulkarni | 202401040134 |
 | Omkar Vairagkar | 202401040045 |
+
+Project guide: Dr. Vijaykumar P. Mantri
 
 > **Live demo:** `https://<your-app>.streamlit.app` *(add your link after deploying)*
 
 ---
 
-## What it does
+## Modules
 
-| Page | Covers | You can… |
+| Section | Page | What you can do |
 |---|---|---|
-| **Overview** | Summary | See live test status, the outcome legend and the team |
-| **Deadlock concepts** | Theory | Read about the four Coffman conditions, the four handling strategies, safe vs unsafe vs deadlocked, and pseudocode |
-| **Avoidance: Banker's** | Scenarios A, B, C | Set processes, resources, Allocation, Maximum and Available. Need is computed automatically. Step through the safety algorithm and Work updates, then submit requests that are granted, made to wait or denied |
-| **Detection & recovery** | Scenario D | Draw the resource-allocation and wait-for graphs, find cycles, confirm deadlock with the method that fits the resource model, and abort a victim to recover |
-| **Prevention** | Scenario E | Run one workload with no policy, ordered acquisition, or all-at-once allocation, and compare deadlock, completion time and utilization |
-| **Test lab** | TC1–TC6, Scenario F | Get the Required Analytical Results Table, filled from live output and downloadable as CSV or Markdown |
-| **AI usage record** | Section 1 | Fill in the editable AI Usage Record and responsible-AI checklist, then export them |
+| Start here | **Overview** | See live test status, the outcome legend, links to every module and the team |
+| | **Deadlock concepts** | Read about the Coffman conditions, all handling strategies, safe vs unsafe vs deadlocked, and pseudocode |
+| Handle deadlocks | **Prevention** (Scenario E) | Run one workload with no policy, ordered acquisition, or all-at-once allocation; compare deadlock, completion time and utilization on a tick-by-tick timeline |
+| | **Avoidance: Banker's** (Scenarios A, B, C) | Edit Allocation, Maximum and Available (Need is computed). **Step through** the safety algorithm with Reset / Previous / Next / Run to end, seeing Work and Finish update and the checked process highlighted. Submit requests that are granted, made to wait, or denied and rolled back |
+| | **Detection & recovery** (Scenario D) | Draw the resource-allocation graph (solid held edges, dashed request edges, ●/○ instances, waiting states, cycles in red) or the wait-for graph. See resource availability and per-process states, confirm deadlock with the right method for the resource model, then abort a victim to recover |
+| | **Ignorance (ostrich)** | Definition, pros, cons and limits; a comparison of all strategies; five real-world "pick a strategy" scenarios with feedback; a strategy advisor; an expected-cost calculator |
+| Practise | **Deadlock games** | Four rounds (18 questions): Coffman conditions, safe or unsafe, spot the deadlock in a graph, prevention challenges. Answers lock in with explanations; score, progress and replay |
+| Evaluate | **Test lab** (TC1–TC6, Scenario F) | The Required Analytical Results Table, filled from live output, downloadable as CSV or Markdown |
+| | **AI usage record** | Editable AI Usage Record and responsible-AI checklist, with export |
+| About | **Team & resources** | Team, revision notes, lecture videos, textbook references, and any authorized class materials in `class_notes/` |
 
 ### Every outcome has its own label
 
@@ -39,9 +44,14 @@ Built for *Operating Systems, IA Assignment Activity 2: AI-Assisted Dashboard De
 | 🔵 **Waiting** | Valid request, but not enough free resources yet |
 | 🟠 **Denied** | Granting would be unsafe, so the state is rolled back |
 | 🔴 **Deadlock** | Processes are blocked on each other right now |
+| 🟢 **No deadlock** | Every process can eventually finish |
 | ⚪ **Invalid** | Input breaks a rule (negative value, unknown process, Allocation > Max, Request > Need) |
 
-An unsafe state is never labelled a deadlock. A request that exceeds Available is never labelled invalid.
+An unsafe state is never labelled a deadlock. A request that exceeds Available is never labelled invalid. Ignoring deadlocks is never presented as eliminating them.
+
+### Light and dark mode
+
+Open the **⋮** menu (top right), then **Settings → Theme**, and pick Light, Dark or System. Both themes are defined in `.streamlit/config.toml`, and the graphs and charts read the active theme, so they stay readable in either mode.
 
 ---
 
@@ -63,27 +73,37 @@ Generated by `core/testcases.py`. The Test lab page shows the same table live.
 ## Run it locally
 
 ```bash
-git clone https://github.com/<you>/<repo>.git
-cd <repo>
+git clone https://github.com/Sanskar1724/OS-IA-Assignment-Activity.git
+cd OS-IA-Assignment-Activity
 python -m venv .venv
 # Windows: .venv\Scripts\activate    macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
 streamlit run streamlit_app.py
 ```
 
-Run the tests:
+The app opens at http://localhost:8501.
+
+## Run the tests
 
 ```bash
 pip install -r requirements-dev.txt
 pytest -q
 ```
 
+60 tests in three files:
+
+| File | Tests | Covers |
+|---|---|---|
+| `tests/test_core.py` | 15 | Banker's, detection, recovery, prevention, validation, TC1–TC6 (hand-checked values) |
+| `tests/test_learning.py` | 30 | Step-through and Finish snapshots, every request outcome, empty input, detection views, ignorance rules, game answers and scoring, class-material listing |
+| `tests/test_app_pages.py` | 15 | Every page renders headlessly (Streamlit AppTest); stepper, request buttons, detection scenarios, games scoring/replay and ignorance feedback |
+
 ## Deploy to Streamlit Community Cloud
 
-1. Push this folder to a **public GitHub repository**. `streamlit_app.py` must be at the repository root.
-2. Go to [share.streamlit.io](https://share.streamlit.io) and click **Create app → Deploy a public app from GitHub**.
-3. Pick your repository and branch, and set **Main file path** to `streamlit_app.py`.
-4. Click **Deploy**. Cloud installs `requirements.txt` automatically. No secrets are needed.
+1. Sign in at [share.streamlit.io](https://share.streamlit.io) with the GitHub account that owns the repository.
+2. Click **Create app → Deploy a public app from GitHub**.
+3. Choose this repository, branch `main`, main file path `streamlit_app.py`.
+4. Click **Deploy**. Cloud installs `requirements.txt`. No secrets are needed.
 
 ---
 
@@ -92,31 +112,53 @@ pytest -q
 ```
 streamlit_app.py        Entry point: page config, navigation, sidebar
 app_pages/              One file per page (UI only)
-core/
-  bankers.py            Need, safety algorithm, resource-request algorithm   (avoidance)
-  detection.py          Detection algorithm, RAG / wait-for cycles, recovery (detection)
-  prevention.py         Tick-by-tick simulator for three policies            (prevention)
+  home.py  concepts.py  prevention.py  avoidance.py  detection.py
+  ignorance.py  games.py  test_lab.py  ai_usage.py  resources.py
+core/                   Logic (no Streamlit import, except ui.py)
+  bankers.py            Need, safety algorithm, request algorithm, step-through helpers
+  detection.py          Detection algorithm, RAG / wait-for cycles, process & resource views, recovery
+  prevention.py         Tick-by-tick simulator for three policies
+  ignorance.py          Strategy comparison, advisor rules, scenarios, cost model
+  games.py              Question banks (answers computed by the algorithms) and scoring
+  resources.py          Revision notes, references, class-material listing
   validation.py         Input validation (Scenario F)
   scenarios.py          Test data for Scenarios A–F
   testcases.py          TC1–TC6, computed from the real functions
   status.py             The distinct outcome states
-  ui.py                 Shared Streamlit widgets, charts and graphs
-  project.py            Team names and PRNs
-tests/test_core.py      Hand-checked pytest suite
-.streamlit/config.toml  Theme
+  ui.py                 Shared widgets, theme-aware charts and graphs
+  project.py            Team names, PRNs and guide
+class_notes/            Put instructor-authorized PDF/PPT/PPTX files here (none included yet)
+tests/                  pytest suite (see above)
+.streamlit/config.toml  Light and dark themes
 ```
-
-All algorithms in `core/` are plain Python with no Streamlit import, so each one can be read, tested and explained on its own.
 
 ## Make it yours
 
-- **Team details:** edit `core/project.py` (member names and PRNs).
-- **Your own test cases:** edit `core/scenarios.py`. The Test lab, the presets and `pytest` all pick up the change.
+- **Team details:** edit `core/project.py`.
+- **Your own test cases:** edit `core/scenarios.py`. The Test lab, the presets, the games and `pytest` all pick up the change.
+- **Class materials:** put authorized `.pdf`, `.ppt` or `.pptx` files in `class_notes/`. The repository is public, so only add files you have permission to share.
 - **AI Usage Record:** fill it in on the *AI usage record* page and download it.
+
+## Screenshots
+
+No screenshots are committed yet. Take them from the running app, for example the Avoidance step-through, the Detection graph and the Test lab table, and add them under `docs/`.
+
+## References
+
+- A. Silberschatz, P. B. Galvin, G. Gagne. *Operating System Concepts*, 10th ed., Wiley, 2018, ch. 8. [os-book.com](https://www.os-book.com/OS10/)
+- R. H. and A. C. Arpaci-Dusseau. *Operating Systems: Three Easy Pieces*, ch. 32. [Free PDF](https://pages.cs.wisc.edu/~remzi/OSTEP/threads-bugs.pdf)
+- E. G. Coffman, M. J. Elphick, A. Shoshani. "System Deadlocks." *ACM Computing Surveys* 3(2), 1971. [doi:10.1145/356586.356588](https://doi.org/10.1145/356586.356588)
+- E. W. Dijkstra. EWD108 (Banker's Algorithm, in Dutch). [PDF](https://www.cs.utexas.edu/~EWD/ewd01xx/EWD108.PDF)
+- A. S. Tanenbaum, H. Bos. *Modern Operating Systems*, 4th ed., Pearson, 2014, ch. 6.
+- Lecture videos are listed with their channels on the *Team & resources* page.
+
+### Attribution
+
+Feature ideas for the ignorance module, games and team page, and the lecture-video list, come from the team's earlier prototype, [Viveksanap18/Deadlock](https://github.com/Viveksanap18/Deadlock). This project re-implements them on its own architecture; no code was copied.
 
 ## AI usage
 
-This project was developed with AI assistance (Claude, via Claude Code) for the dashboard design, algorithm code and test data. The group must verify every result independently, as required by the brief. Use the AI usage record page and the hand-checked values in `tests/test_core.py` as a starting point.
+Claude (Anthropic), via Claude Code, was used for the dashboard design, the algorithm code, the test data and tests, and this README. The upgrade that added the ignorance module, games, Banker's step-through, richer graphs, the resources page and theming was AI-assisted too. The group must verify every result independently, as the brief requires. Use the *AI usage record* page and the hand-checked values in `tests/` as a starting point.
 
 ## License
 

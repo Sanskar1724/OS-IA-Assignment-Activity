@@ -1,13 +1,15 @@
 from copy import deepcopy
 
+import pandas as pd
 import streamlit as st
 
-from core.detection import (detection_algorithm, is_single_instance, pick_victim, rag_cycle, recover,
-                            total_instances, wait_for_edges, wfg_cycle)
+from core.detection import (detection_algorithm, is_single_instance, name_cycle, pick_victim,
+                            process_states, rag_cycle, recover, resource_summary, total_instances,
+                            wait_for_edges, wfg_cycle)
 from core.scenarios import DETECTION
 from core.status import Status
-from core.ui import (edit_matrix, edit_vector, footer, rag_dot, resize, resource_names, sequence_chips,
-                     show_matrix, status_banner, trace_table, vec, wfg_dot)
+from core.ui import (edit_matrix, edit_vector, footer, graph_legend, rag_dot, resize, resource_names,
+                     sequence_chips, show_matrix, status_banner, trace_table, vec, wfg_dot)
 from core.validation import validate_detection
 
 
@@ -106,19 +108,45 @@ with g1:
     if view == "Wait-for graph":
         st.graphviz_chart(wfg_dot(n, wait_for_edges(allocation, request), res_names, w_cycle, result.deadlocked),
                           width="stretch")
+        st.caption("The wait-for graph collapses resources: P → Q means P waits for something Q holds. "
+                   "The edge label names the resource.")
     else:
-        st.graphviz_chart(rag_dot(allocation, request, res_names, r_cycle, result.deadlocked, totals),
+        st.graphviz_chart(rag_dot(allocation, request, res_names, r_cycle, result.deadlocked, available),
                           width="stretch")
 with g2:
     st.markdown("**How to read it**")
+    graph_legend()
+
+r1, r2 = st.columns(2)
+with r1:
+    st.markdown("**Resource availability**")
+    st.dataframe(pd.DataFrame([{
+        "Resource": res_names[r["resource"]], "Total": r["total"], "Held": r["allocated"], "Free": r["free"],
+        "Requested": r["requested"], "Short by": r["shortfall"],
+    } for r in resource_summary(allocation, request, available)]), hide_index=True, width="stretch",
+        column_config={"Short by": st.column_config.NumberColumn(
+            help="Outstanding requests minus free instances. Above 0 means some requests can't be met now.")})
+with r2:
+    st.markdown("**Process states**")
+    label = {"deadlocked": "🔴 Deadlocked", "waiting": "🟠 Waiting", "not waiting": "🔵 Not waiting"}
+    st.dataframe(pd.DataFrame([{
+        "Process": f"P{r['process']}", "Holds": vec(allocation[r["process"]]),
+        "Requests": vec(request[r["process"]]), "State": label[r["state"]],
+        "Waits on": ", ".join(f"P{k}" for k in r["waits_on"]) or "—",
+        "Finishes": f"#{r['finish_order']}" if r["finish_order"] else "never",
+    } for r in process_states(allocation, request, result)]), hide_index=True, width="stretch")
+
+with st.expander("Why a cycle isn't always a deadlock", icon=":material/help:"):
     st.markdown(
-        "- :blue[**Solid arrow R → P**]: an instance of R is *held* by P (assignment edge)\n"
-        "- **Dashed arrow P → R**: P is *waiting* for R (request edge)\n"
-        "- Dots under a resource: number of instances\n"
-        "- :red[**Red edges**]: a cycle, i.e. a circular wait\n"
-        "- :red[**Red processes**]: confirmed deadlocked by the detection algorithm"
+        "- With **single-instance** resources, every request edge points at the one holder. If the waits "
+        "form a cycle, nobody in it can ever be served: the cycle **proves** deadlock.\n"
+        "- With **multiple instances**, a process on the cycle can be served by *another* instance, held by "
+        "a process **outside** the cycle. When that process finishes and releases it, the cycle breaks.\n"
+        "- So for multiple instances a cycle is only a **potential** circular wait. The detection algorithm "
+        "(Work/Finish reduction on current requests) gives the confirmed answer.\n"
+        "- Try the *cycle but NO deadlock* scenario: P0 → R0 → P2 → R1 → P0 is a cycle, yet P1 and P3 free "
+        "the instances that P0 and P2 need."
     )
-    st.caption("The wait-for graph collapses resources: P → Q means P waits for something Q holds.")
 
 # --- 3. Verdict ---------------------------------------------------------------------------
 
@@ -128,7 +156,7 @@ with v1.container(border=True, height="stretch"):
     st.markdown("**Graph check: circular wait**")
     if r_cycle:
         st.markdown(":orange-badge[:material/cycle: Cycle found]")
-        st.markdown(" → ".join(r_cycle))
+        st.markdown(" → ".join(name_cycle(r_cycle, res_names)))
         st.caption("Proof of deadlock for single-instance resources." if single else
                    "Only a *potential* circular wait, because resources have several instances.")
     else:
@@ -220,6 +248,6 @@ if result.deadlocked:
             show_matrix(rec.allocation, procs, res_names)
         with a2:
             st.markdown("**Graph after recovery**")
-            st.graphviz_chart(rag_dot(rec.allocation, rec.request, res_names, [], [], totals), width="stretch")
+            st.graphviz_chart(rag_dot(rec.allocation, rec.request, res_names, [], [], rec.available), width="stretch")
 
 footer()

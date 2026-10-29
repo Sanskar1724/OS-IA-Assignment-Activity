@@ -102,6 +102,40 @@ def safety_algorithm(allocation: Matrix, maximum: Matrix, available: Vector) -> 
     return SafetyResult(all(finish), sequence, steps, finish, work)
 
 
+def finish_snapshots(result: SafetyResult, n: int) -> list[list[bool]]:
+    """Finish vector after each recorded step, for the step-through view.
+
+    Entry k is the Finish vector once step k has been applied, so the list has
+    one entry per step in result.steps.
+    """
+    finish = [False] * n
+    snaps = []
+    for s in result.steps:
+        if s.can_finish:
+            finish[s.process] = True
+        snaps.append(list(finish))
+    return snaps
+
+
+STEP_ACTIONS = ("reset", "prev", "next", "end")
+
+
+def move_step(current: int, total: int, action: str) -> int:
+    """Stepper position after a button press.
+
+    Position 0 is the initial state (Work = Available, nothing finished);
+    position k (1..total) means steps 1..k have been applied.
+    """
+    if action not in STEP_ACTIONS:
+        raise ValueError(f"Unknown step action: {action!r}")
+    if total <= 0 or action == "reset":
+        return 0
+    if action == "end":
+        return total
+    current = min(max(current, 0), total)
+    return min(current + 1, total) if action == "next" else max(current - 1, 0)
+
+
 @dataclass
 class RequestResult:
     status: Status

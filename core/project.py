@@ -7,6 +7,8 @@ PROJECT = {
     "activity": "IA Assignment Activity 2",
     "institute": "MIT Academy of Engineering",
     "year": 2026,
+    # As listed in the team's reference repository (Viveksanap18/Deadlock).
+    "guide": "Dr. Vijaykumar P. Mantri",
     # (Name, PRN)
     "members": [
         ("Sanskar Chandawar", "202401040137"),
